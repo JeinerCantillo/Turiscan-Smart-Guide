@@ -5,18 +5,6 @@
  * Turiscan API - Smart Tourist Guide
  * OpenAPI spec version: 0.1.0
  */
-export interface HealthStatus {
-  status: string;
-}
-
-export interface City {
-  id: number;
-  name: string;
-  department: string;
-  country: string;
-  description: string;
-  imageUrl?: string | null;
-}
 
 export interface Place {
   id: number;
@@ -33,13 +21,3 @@ export interface Place {
   visitHours?: string | null;
   visitDuration?: string | null;
 }
-
-export interface NotFoundError {
-  error: string;
-  message: string;
-}
-
-export type GetPlacesParams = {
-  cityId?: number;
-  search?: string;
-};

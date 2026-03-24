@@ -1,15 +1,18 @@
 openapi: 3.1.0
 info:
-  # Do not change the title, if the title changes, the import paths will be broken
   title: Api
   version: 0.1.0
-  description: API specification
+  description: Turiscan API - Smart Tourist Guide
 servers:
   - url: /api
     description: Base API path
 tags:
   - name: health
     description: Health operations
+  - name: places
+    description: Tourist places operations
+  - name: cities
+    description: Cities operations
 paths:
   /healthz:
     get:
@@ -24,6 +27,94 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/HealthStatus"
+  /places:
+    get:
+      operationId: getPlaces
+      tags: [places]
+      summary: Get all tourist places
+      description: Returns list of tourist places optionally filtered by city
+      parameters:
+        - name: cityId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: search
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of tourist places
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Place"
+  /places/{id}:
+    get:
+      operationId: getPlaceById
+      tags: [places]
+      summary: Get a tourist place by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Tourist place details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Place"
+        "404":
+          description: Place not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+  /places/qr/{qrCode}:
+    get:
+      operationId: getPlaceByQrCode
+      tags: [places]
+      summary: Get a tourist place by QR code
+      parameters:
+        - name: qrCode
+          in: path
+          required: true
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Tourist place details
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Place"
+        "404":
+          description: Place not found
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/NotFoundError"
+  /cities:
+    get:
+      operationId: getCities
+      tags: [cities]
+      summary: Get all cities
+      responses:
+        "200":
+          description: List of cities
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/City"
 components:
   schemas:
     HealthStatus:
@@ -33,4 +124,80 @@ components:
           type: string
       required:
         - status
-
+    City:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        department:
+          type: string
+        country:
+          type: string
+        description:
+          type: string
+        imageUrl:
+          type: string
+          nullable: true
+      required:
+        - id
+        - name
+        - department
+        - country
+        - description
+    Place:
+      type: object
+      properties:
+        id:
+          type: integer
+        cityId:
+          type: integer
+        cityName:
+          type: string
+        name:
+          type: string
+        shortDescription:
+          type: string
+        history:
+          type: string
+        imageUrl:
+          type: string
+          nullable: true
+        latitude:
+          type: number
+          format: float
+        longitude:
+          type: number
+          format: float
+        qrCode:
+          type: string
+        category:
+          type: string
+        visitHours:
+          type: string
+          nullable: true
+        visitDuration:
+          type: string
+          nullable: true
+      required:
+        - id
+        - cityId
+        - cityName
+        - name
+        - shortDescription
+        - history
+        - latitude
+        - longitude
+        - qrCode
+        - category
+    NotFoundError:
+      type: object
+      properties:
+        error:
+          type: string
+        message:
+          type: string
+      required:
+        - error
+        - message
