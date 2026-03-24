@@ -1,0 +1,33 @@
+"Actúa como un desarrollador experto en React Native y Expo. Quiero mejorar visualmente la app 'Turiscan'.
+
+Interfaz Inmersiva: Aplica un diseño con degradados (Linear Gradient) usando los colores #2E86AB (Mar) y #F4D03F (Sol). Usa bordes muy redondeados, sombras suaves (neomorfismo ligero) y tipografía redondeada.
+
+Avatar Guía: Integra la librería lottie-react-native. Crea un componente llamado GuiaAvatar que cargue una animación JSON. El avatar debe ser un personaje animado representativo de la costa colombiana (como un joven con sombrero vueltiao). El avatar debe 'reaccionar' cuando se pulsa (saltar o saludar).
+
+Modos de Accesibilidad: Crea un AccessibilityContext. La app debe tener un selector de modo:
+
+Modo Estándar: Narración de voz y texto.
+
+Modo Sordo: Prioriza subtítulos grandes, vibraciones hápticas intensas y muestra automáticamente un componente de video para Lengua de Señas Colombiana (LSC).
+
+Modo Mudo: Interfaz basada en iconos grandes y gestos rápidos para comunicarse con comercios o guías locales.
+
+Pantalla de Detalle: Hazla tipo 'Parallax' donde la imagen del lugar de Ciénaga se encoja al hacer scroll.
+Por favor, genera el código de App.js, el contexto de accesibilidad y un ejemplo de la pantalla de detalle inmersiva."
+
+2. Estructura Visual Sugerida (Componentes)
+Para lograr esa inmersión, tu código debería verse estructuralmente así:
+
+A. El Avatar con Lottie
+En lugar de una imagen estática, el guía se mueve. Puedes buscar archivos JSON gratuitos en LottieFiles (busca "Pelican", "Guide" o "Caribbean").
+
+B. Selector de Modos (Inclusión Total)
+Este componente permite que la app se transforme según la necesidad del turista:
+3. Mejoras de Diseño "Costero"
+Para que se sienta "Ciénaga", usa estas reglas de diseño en tus Styles:
+
+Fondos: No uses blanco puro. Usa un azul muy claro #F0F8FF que evoque la brisa.
+
+Tarjetas: Agrega un borderRadius: 25 y un elevation: 5 en Android para que parezcan flotar sobre la arena.
+
+Botones: Usa el color naranja #E74C3C (Atardecer) para los botones de acción principal como "Escanear QR".
