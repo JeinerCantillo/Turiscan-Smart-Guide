@@ -1,0 +1,126 @@
+Quiero desarrollar una aplicación móvil llamada Turiscan en FlutterFlow. La app debe funcionar sin problemas, con un diseño super elegante y profesional. Debe incluir:
+
+### 1. Autenticación y roles de usuario
+- **Dos roles:** Administrador y Visitante (usar tabla `profiles` en Supabase con columna `role`).
+- **Login/Registro** con email/contraseña (usar Supabase Auth).
+- El Administrador puede crear, editar y eliminar lugares (restaurantes, tiendas, sitios turísticos). Los Visitantes solo pueden ver, calificar, reseñar y escanear QR.
+
+### 2. Base de datos (Supabase)
+- **Tabla `places`**: id, nombre, descripción, historia, imagen_url, latitud, longitud, direccion, horarios, precio, video_360_url, tipo (restaurante/tienda/turístico), creado_por.
+- **Tabla `reviews`**: id, place_id, user_id, rating, comentario, foto_url, timestamp.
+- **Tabla `profiles`**: id, email, role, avatar_url, visited_places (array), created_at.
+- **Tabla `achievements`**: id, nombre, descripcion, icono, criterio.
+- **Tabla `user_achievements`**: user_id, achievement_id, unlocked_at.
+- **Tabla `routes`**: id, user_id, nombre, lugares (array de ids), created_at.
+
+### 3. Funcionalidades principales
+
+#### a) Mapa interactivo (profesional)
+- Mapa con **Google Maps** que muestra todos los lugares (según rol, los creados por admin son visibles para todos).
+- **Slider de radio** para filtrar lugares cercanos (1,5,10,20 km) – usar geolocalización.
+- **Marcadores personalizados** con ícono según tipo (restaurante, tienda, turístico).
+- Al tocar un marcador:
+  - **Bottom sheet elegante** con:
+    - Nombre, imagen miniatura, distancia, calificación promedio.
+    - Botón **"Realidad virtual"** → reproduce video en 360° (usar `Video Player` o `WebView` con reproductor de YouTube 360).
+    - Botón **"Cómo llegar"** → traza ruta con Directions API (polilínea) y muestra instrucciones paso a paso.
+    - Botón **"Ver detalles"** → navega a pantalla de detalle del lugar.
+  - **Lista horizontal inferior** con los mismos lugares (para accesibilidad).
+
+#### b) Avatar guía turístico (con narración)
+- **Personaje animado** (Lottie) que aparece en la pantalla de escaneo QR y en detalle del lugar.
+- Al escanear un QR (que contiene el ID del lugar), el avatar:
+  - Narra la historia del lugar usando **texto a voz (TTS)**.
+  - Muestra subtítulos sincronizados.
+  - Opcional: el avatar se mueve y tiene animación de "hablando".
+- También el usuario puede tocar al avatar para que repita la historia.
+- El avatar se puede mostrar en la pantalla de inicio dando la bienvenida.
+
+#### c) Realidad virtual (inmersión)
+- Cada lugar tiene un **video en 360°** (URL de YouTube 360 o archivo subido a Supabase Storage).
+- El video se puede reproducir desde el mapa (bottom sheet) o desde el detalle del lugar.
+- Reproductor con controles: pausa, volumen, pantalla completa, modo gafas VR (side-by-side).
+- El objetivo es motivar al turista a visitar el lugar físicamente.
+
+#### d) Escaneo de QR
+- Pantalla con cámara (widget QR Code Scanner).
+- Al escanear un código, se obtiene el ID del lugar y se muestra el avatar narrando la historia.
+- Tras la narración, se muestra un resumen del lugar y botones para ver video VR, mapa, reseñas, etc.
+
+#### e) Pantalla de detalle del lugar (unifica toda la información)
+- Carrusel de fotos, nombre, dirección, horarios, precio.
+- Historia completa.
+- Avatar guía (con botón para narrar).
+- Botón "Ver en realidad virtual".
+- Botón "Ver en mapa" (abre el mapa centrado).
+- Sistema de calificación con estrellas y reseñas:
+  - Mostrar promedio.
+  - Formulario para añadir reseña (solo visitantes autenticados).
+  - Lista de reseñas con avatar, nombre, rating, comentario, foto.
+- Botón "Compartir" (redes sociales).
+
+#### f) Panel de administración (solo para usuarios con rol admin)
+- Acceso desde un botón en el perfil o un menú especial.
+- **CRUD de lugares**:
+  - Lista de lugares existentes (con opciones editar/eliminar).
+  - Formulario para crear nuevo lugar (todos los campos: nombre, descripción, imagen, coordenadas (selector en mapa), horarios, precio, video 360, etc.).
+  - Subida de imágenes y vídeos a Supabase Storage.
+  - Opción de marcar si es restaurante, tienda o turístico (para iconos en el mapa).
+
+#### g) Perfil de usuario y logros
+- Foto de perfil, nombre, estadísticas (lugares visitados, reseñas escritas).
+- Lista de logros desbloqueados (ej. "Primer escaneo", "Explorador", "Crítico", "Realidad inmersiva").
+- Barra de progreso para logros no desbloqueados.
+- Botón "Cerrar sesión".
+- Acceso al planificador de rutas.
+
+#### h) Planificador de rutas (simple)
+- Lista de lugares con checkbox para seleccionar varios.
+- Guardar ruta con nombre en Supabase.
+- Ver rutas guardadas y mostrarlas en el mapa (opcional).
+
+### 4. Diseño visual (estricto)
+- **Colores:** primario #1A5F7A, secundario #F7D44A, fondo #F9F9F9, tarjetas blancas con sombra, texto #2C3E50.
+- **Tipografía:** títulos Montserrat Bold, cuerpo Open Sans Regular.
+- **Bordes redondeados:** 16px en tarjetas, 25px en botones.
+- **Botones con gradiente** (azul a azul oscuro) y efecto de escala al tocar.
+- **Animaciones suaves** (fade, slide).
+- **Avatar guía:** tamaño 80x80, con efecto de brillo cuando habla.
+
+### 5. Configuración técnica en FlutterFlow
+- Usar **Supabase** como backend (conectar mediante Custom Actions o el plugin de Supabase en FlutterFlow).
+- **Permisos:** Cámara, Ubicación, Almacenamiento.
+- **Custom Actions necesarias:**
+  - `getDirections` (llamar a Directions API de Google Maps para rutas).
+  - `calculateDistance` (filtrado por radio).
+  - `checkAndUnlockAchievements` (verificar logros al escanear/reseñar).
+  - `speakWithAvatar` (TTS con subtítulos).
+- **Widgets clave:** Google Maps, QR Code Scanner, Video Player (para 360°), Lottie (avatar), RatingBar, ListView.
+
+### 6. Flujo de usuario esperado
+1. **Registro/Login** (el primer usuario puede ser admin si se configura en la tabla profiles).
+2. El admin crea lugares (restaurantes, tiendas, sitios turísticos) con coordenadas, fotos, video 360, etc.
+3. Los visitantes abren el mapa, ven los lugares cercanos, seleccionan uno:
+   - Ven el video 360 para conocer el lugar.
+   - Obtienen la ruta para llegar.
+   - Ven reseñas y calificaciones.
+4. Cuando el visitante llega físicamente al lugar, escanea el código QR.
+5. El avatar guía narra la historia del lugar (con subtítulos).
+6. Después, puede dejar una reseña, compartir, desbloquear logros, etc.
+
+### 7. Requisitos de calidad
+- La app debe ser **fluida** (sin lag), con carga rápida de mapas y vídeos.
+- **Sin errores** de conexión: manejar casos sin internet con caché local (usar SQLite como respaldo).
+- **Interfaz muy cuidada**, con espaciado generoso, sombras suaves, tipografía clara.
+- **Iconos modernos** (Material Icons o FontAwesome).
+- **Adaptable a diferentes tamaños de pantalla** (responsivo).
+
+### 8. Entregable
+Necesito que me generes las instrucciones detalladas para construir esta app en FlutterFlow, incluyendo:
+- Configuración de Supabase (tablas, políticas de seguridad).
+- Lista de widgets a usar en cada pantalla.
+- Código de las Custom Actions (en Dart) para rutas, narración con avatar, etc.
+- Pasos para subir imágenes y vídeos a Supabase Storage.
+- Cómo implementar el rol de administrador y el CRUD de lugares.
+
+Si es posible, proporciona también un enlace a un proyecto de ejemplo o archivos de configuración.

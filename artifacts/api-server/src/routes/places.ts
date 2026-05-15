@@ -4,26 +4,29 @@ import { db, citiesTable, placesTable } from "@workspace/db";
 
 const router: IRouter = Router();
 
+const placeFields = {
+  id: placesTable.id,
+  cityId: placesTable.cityId,
+  cityName: citiesTable.name,
+  name: placesTable.name,
+  shortDescription: placesTable.shortDescription,
+  history: placesTable.history,
+  imageUrl: placesTable.imageUrl,
+  latitude: placesTable.latitude,
+  longitude: placesTable.longitude,
+  qrCode: placesTable.qrCode,
+  category: placesTable.category,
+  visitHours: placesTable.visitHours,
+  visitDuration: placesTable.visitDuration,
+  video360Url: placesTable.video360Url,
+};
+
 router.get("/places", async (req, res) => {
   try {
     const { cityId, search } = req.query;
 
     const rows = await db
-      .select({
-        id: placesTable.id,
-        cityId: placesTable.cityId,
-        cityName: citiesTable.name,
-        name: placesTable.name,
-        shortDescription: placesTable.shortDescription,
-        history: placesTable.history,
-        imageUrl: placesTable.imageUrl,
-        latitude: placesTable.latitude,
-        longitude: placesTable.longitude,
-        qrCode: placesTable.qrCode,
-        category: placesTable.category,
-        visitHours: placesTable.visitHours,
-        visitDuration: placesTable.visitDuration,
-      })
+      .select(placeFields)
       .from(placesTable)
       .leftJoin(citiesTable, eq(placesTable.cityId, citiesTable.id))
       .where(
@@ -49,21 +52,7 @@ router.get("/places/qr/:qrCode", async (req, res) => {
     const { qrCode } = req.params;
 
     const rows = await db
-      .select({
-        id: placesTable.id,
-        cityId: placesTable.cityId,
-        cityName: citiesTable.name,
-        name: placesTable.name,
-        shortDescription: placesTable.shortDescription,
-        history: placesTable.history,
-        imageUrl: placesTable.imageUrl,
-        latitude: placesTable.latitude,
-        longitude: placesTable.longitude,
-        qrCode: placesTable.qrCode,
-        category: placesTable.category,
-        visitHours: placesTable.visitHours,
-        visitDuration: placesTable.visitDuration,
-      })
+      .select(placeFields)
       .from(placesTable)
       .leftJoin(citiesTable, eq(placesTable.cityId, citiesTable.id))
       .where(eq(placesTable.qrCode, qrCode));
@@ -84,21 +73,7 @@ router.get("/places/:id", async (req, res) => {
     const id = Number(req.params.id);
 
     const rows = await db
-      .select({
-        id: placesTable.id,
-        cityId: placesTable.cityId,
-        cityName: citiesTable.name,
-        name: placesTable.name,
-        shortDescription: placesTable.shortDescription,
-        history: placesTable.history,
-        imageUrl: placesTable.imageUrl,
-        latitude: placesTable.latitude,
-        longitude: placesTable.longitude,
-        qrCode: placesTable.qrCode,
-        category: placesTable.category,
-        visitHours: placesTable.visitHours,
-        visitDuration: placesTable.visitDuration,
-      })
+      .select(placeFields)
       .from(placesTable)
       .leftJoin(citiesTable, eq(placesTable.cityId, citiesTable.id))
       .where(eq(placesTable.id, id));

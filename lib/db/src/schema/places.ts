@@ -17,6 +17,7 @@ export const placesTable = pgTable("places", {
   category: text("category").notNull().default("Historic"),
   visitHours: text("visit_hours"),
   visitDuration: text("visit_duration"),
+  video360Url: text("video_360_url"),
 });
 
 export const insertPlaceSchema = createInsertSchema(placesTable).omit({ id: true });

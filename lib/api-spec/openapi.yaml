@@ -180,6 +180,9 @@ components:
         visitDuration:
           type: string
           nullable: true
+        video360Url:
+          type: string
+          nullable: true
       required:
         - id
         - cityId

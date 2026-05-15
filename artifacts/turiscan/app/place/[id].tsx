@@ -127,6 +127,13 @@ export default function PlaceDetailScreen() {
     router.replace("/scanner");
   };
 
+  const handleOpenVR = () => {
+    if (!place) return;
+    Speech.stop();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    router.push({ pathname: "/vr/[id]", params: { id: String(place.id) } });
+  };
+
   if (isLoading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
@@ -350,6 +357,24 @@ export default function PlaceDetailScreen() {
             </View>
           </View>
 
+          {/* VR Video button */}
+          {place.video360Url && (
+            <TouchableOpacity
+              onPress={handleOpenVR}
+              style={[styles.vrBtn, { backgroundColor: "#1A1A2E" }]}
+              activeOpacity={0.85}
+            >
+              <View style={styles.vrBtnLeft}>
+                <Ionicons name="glasses" size={26} color="#fff" />
+                <View>
+                  <Text style={styles.vrBtnTitle}>Realidad Virtual 360°</Text>
+                  <Text style={styles.vrBtnSub}>Visita este lugar de forma inmersiva</Text>
+                </View>
+              </View>
+              <Feather name="chevron-right" size={18} color="rgba(255,255,255,0.5)" />
+            </TouchableOpacity>
+          )}
+
           {/* QR Code info */}
           <View style={[styles.qrInfoCard, { backgroundColor: colors.backgroundCard, borderColor: colors.border }]}>
             <Ionicons name="qr-code-outline" size={20} color={colors.textMuted} />
@@ -546,4 +571,16 @@ const styles = StyleSheet.create({
     borderWidth: 1.5,
   },
   scanAnotherText: { fontSize: 15, fontFamily: "Inter_600SemiBold" },
+  vrBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    borderRadius: 16,
+    marginBottom: 16,
+    gap: 12,
+  },
+  vrBtnLeft: { flexDirection: "row", alignItems: "center", gap: 14, flex: 1 },
+  vrBtnTitle: { color: "#fff", fontSize: 15, fontFamily: "Inter_700Bold" },
+  vrBtnSub: { color: "rgba(255,255,255,0.6)", fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
 });

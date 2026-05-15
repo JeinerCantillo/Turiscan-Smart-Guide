@@ -32,6 +32,7 @@ export interface Place {
   category: string;
   visitHours?: string | null;
   visitDuration?: string | null;
+  video360Url?: string | null;
 }
 
 export interface NotFoundError {
