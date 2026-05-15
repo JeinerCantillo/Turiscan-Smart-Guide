@@ -1,4 +1,4 @@
-import { doublePrecision, pgTable, serial, text } from "drizzle-orm/pg-core";
+import { doublePrecision, integer, numeric, pgTable, serial, text } from "drizzle-orm/pg-core";
 import { createInsertSchema } from "drizzle-zod";
 import { z } from "zod/v4";
 
@@ -10,6 +10,7 @@ export const placesTable = pgTable("places", {
   name: text("name").notNull(),
   shortDescription: text("short_description").notNull(),
   history: text("history").notNull(),
+  address: text("address"),
   imageUrl: text("image_url"),
   latitude: doublePrecision("latitude").notNull(),
   longitude: doublePrecision("longitude").notNull(),
@@ -18,6 +19,8 @@ export const placesTable = pgTable("places", {
   visitHours: text("visit_hours"),
   visitDuration: text("visit_duration"),
   video360Url: text("video_360_url"),
+  avgRating: numeric("avg_rating", { precision: 3, scale: 2 }).default("0"),
+  reviewCount: integer("review_count").default(0),
 });
 
 export const insertPlaceSchema = createInsertSchema(placesTable).omit({ id: true });

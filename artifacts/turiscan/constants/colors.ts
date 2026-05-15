@@ -1,50 +1,61 @@
-const primary = "#1A6B4A";
-const primaryLight = "#2D9D6E";
-const primaryDark = "#0E4A32";
-const accent = "#F5A623";
-const accentLight = "#FFBE5C";
+const primary = "#1A5F7A";
+const primaryLight = "#2E86AB";
+const primaryDark = "#0D3F54";
+const accent = "#F4D03F";
+const accentLight = "#F7DC6F";
+const accentDark = "#D4AC0D";
 
 export default {
   light: {
-    text: "#1A1A1A",
-    textSecondary: "#666666",
-    textMuted: "#999999",
-    background: "#F7F5F0",
-    backgroundSecondary: "#FFFFFF",
+    text: "#1A2C3D",
+    textSecondary: "#4A6070",
+    textMuted: "#8CA0B0",
+    background: "#F0F8FF",
+    backgroundSecondary: "#E8F4FD",
     backgroundCard: "#FFFFFF",
-    border: "#E8E4DC",
+    border: "#C8DFF0",
     tint: primary,
     tintLight: primaryLight,
     tintDark: primaryDark,
     accent: accent,
     accentLight: accentLight,
-    tabIconDefault: "#B0ADA6",
+    accentDark: accentDark,
+    tabIconDefault: "#8CA0B0",
     tabIconSelected: primary,
-    shadow: "rgba(0,0,0,0.1)",
+    shadow: "rgba(26, 95, 122, 0.12)",
     overlay: "rgba(0,0,0,0.5)",
     success: "#27AE60",
     error: "#E74C3C",
-    scannerBorder: "#1A6B4A",
+    warning: "#F39C12",
+    scannerBorder: primary,
+    gold: "#F4D03F",
+    starFull: "#F4D03F",
+    starEmpty: "#D0E4F0",
   },
   dark: {
-    text: "#F2EDE4",
-    textSecondary: "#B0ADA6",
-    textMuted: "#777777",
-    background: "#0E1A14",
-    backgroundSecondary: "#162018",
-    backgroundCard: "#1C2B22",
-    border: "#2A3D31",
+    text: "#F0F8FF",
+    textSecondary: "#A8C5D8",
+    textMuted: "#5A7A90",
+    background: "#0B1929",
+    backgroundSecondary: "#112233",
+    backgroundCard: "#152535",
+    border: "#1E3550",
     tint: primaryLight,
-    tintLight: "#3DB882",
+    tintLight: "#48A9CC",
     tintDark: primaryDark,
     accent: accent,
     accentLight: accentLight,
-    tabIconDefault: "#555555",
+    accentDark: accentDark,
+    tabIconDefault: "#3A5570",
     tabIconSelected: primaryLight,
-    shadow: "rgba(0,0,0,0.3)",
+    shadow: "rgba(0,0,0,0.4)",
     overlay: "rgba(0,0,0,0.7)",
     success: "#2ECC71",
     error: "#E74C3C",
+    warning: "#F39C12",
     scannerBorder: primaryLight,
+    gold: "#F4D03F",
+    starFull: "#F4D03F",
+    starEmpty: "#2A4060",
   },
 };

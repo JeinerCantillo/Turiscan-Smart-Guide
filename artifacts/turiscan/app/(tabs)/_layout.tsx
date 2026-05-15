@@ -20,9 +20,9 @@ function NativeTabLayout() {
         <Icon sf={{ default: "location", selected: "location.fill" }} />
         <Label>Mapa</Label>
       </NativeTabs.Trigger>
-      <NativeTabs.Trigger name="about">
-        <Icon sf={{ default: "info.circle", selected: "info.circle.fill" }} />
-        <Label>Acerca de</Label>
+      <NativeTabs.Trigger name="profile">
+        <Icon sf={{ default: "person.circle", selected: "person.circle.fill" }} />
+        <Label>Perfil</Label>
       </NativeTabs.Trigger>
     </NativeTabs>
   );
@@ -95,17 +95,18 @@ function ClassicTabLayout() {
         }}
       />
       <Tabs.Screen
-        name="about"
+        name="profile"
         options={{
-          title: "Acerca de",
+          title: "Perfil",
           tabBarIcon: ({ color }) =>
             isIOS ? (
-              <SymbolView name="info.circle" tintColor={color} size={24} />
+              <SymbolView name="person.circle" tintColor={color} size={24} />
             ) : (
-              <Feather name="info" size={22} color={color} />
+              <Feather name="user" size={22} color={color} />
             ),
         }}
       />
+      <Tabs.Screen name="about" options={{ href: null }} />
     </Tabs>
   );
 }
