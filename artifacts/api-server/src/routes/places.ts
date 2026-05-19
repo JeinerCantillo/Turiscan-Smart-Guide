@@ -23,6 +23,7 @@ const placeFields = {
   video360Url: placesTable.video360Url,
   avgRating: placesTable.avgRating,
   reviewCount: placesTable.reviewCount,
+  galleryUrls: placesTable.galleryUrls,
 };
 
 router.get("/places", async (req, res) => {

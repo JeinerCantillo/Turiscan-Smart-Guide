@@ -7,6 +7,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
 
 import Colors from "@/constants/colors";
+import { FloatingGuideChat } from "@/components/FloatingGuideChat";
 
 function ScanFABButton() {
   const colorScheme = useColorScheme();
@@ -39,6 +40,7 @@ export default function TabLayout() {
   const isWeb = Platform.OS === "web";
 
   return (
+    <View style={{ flex: 1 }}>
     <Tabs
       screenOptions={{
         headerShown: false,
@@ -101,6 +103,8 @@ export default function TabLayout() {
       />
       <Tabs.Screen name="about" options={{ href: null }} />
     </Tabs>
+    <FloatingGuideChat />
+    </View>
   );
 }
 

@@ -21,6 +21,7 @@ import * as Speech from "expo-speech";
 
 import Colors from "@/constants/colors";
 import { TuriscanMap } from "@/components/TuriscanMap";
+import { PlaceCarousel } from "@/components/PlaceCarousel";
 import { useGetPlaceById, useGetPlaceByQrCode } from "@workspace/api-client-react";
 import { useAuth } from "@/context/AuthContext";
 
@@ -218,8 +219,22 @@ export default function PlaceDetailScreen() {
     if (isSpeaking) { Speech.stop(); setIsSpeaking(false); return; }
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     setIsSpeaking(true);
-    Speech.speak(`${place.name}. ${place.shortDescription}. ${place.history}`, {
-      language: "es-CO", rate: 0.9, pitch: 1.0,
+
+    let voiceId: string | undefined;
+    try {
+      const voices = await Speech.getAvailableVoicesAsync();
+      const co = voices.find((v) => v.language === "es-CO" || v.language === "es_CO");
+      const lat = voices.find((v) => v.language === "es-419" || v.language === "es-US");
+      const enhanced = voices.find((v) => v.language.startsWith("es") && v.name.toLowerCase().includes("enhanced"));
+      const anyEs = voices.find((v) => v.language.startsWith("es"));
+      voiceId = (co || lat || enhanced || anyEs)?.identifier;
+    } catch {}
+
+    Speech.speak(place.history ?? place.shortDescription ?? place.name, {
+      language: "es-CO",
+      voice: voiceId,
+      rate: 0.85,
+      pitch: 1.0,
       onDone: () => setIsSpeaking(false),
       onStopped: () => setIsSpeaking(false),
       onError: () => setIsSpeaking(false),
@@ -288,20 +303,21 @@ export default function PlaceDetailScreen() {
         scrollEventThrottle={16}
         contentContainerStyle={{ paddingBottom: insets.bottom + (Platform.OS === "web" ? 34 : 0) + 60 }}
       >
-        {/* Hero image */}
-        <View style={[styles.heroContainer, { height: IMAGE_HEIGHT }]}>
-          {place.imageUrl ? (
-            <Image source={{ uri: place.imageUrl }} style={styles.heroImage} resizeMode="cover" onLoad={() => setImageLoaded(true)} />
-          ) : (
-            <View style={[styles.heroImagePlaceholder, { backgroundColor: colors.backgroundSecondary }]}>
-              <Feather name={iconName as any} size={64} color={colors.textMuted} />
-            </View>
-          )}
+        {/* Hero carousel */}
+        <PlaceCarousel
+          imageUrl={place.imageUrl}
+          galleryUrls={(place as any).galleryUrls ? JSON.parse((place as any).galleryUrls) : null}
+          height={IMAGE_HEIGHT}
+          placeholderIcon={iconName}
+          placeholderColor={colors.backgroundSecondary}
+        >
+          {/* Back button */}
           <View style={[styles.imageTopControls, { paddingTop: insets.top + (Platform.OS === "web" ? 67 : 0) + 8 }]}>
             <TouchableOpacity onPress={handleBack} style={styles.imageBackBtn}>
               <Feather name="chevron-left" size={22} color="#fff" />
             </TouchableOpacity>
           </View>
+          {/* Category + city badges */}
           <View style={styles.heroBadgeContainer}>
             <View style={[styles.heroBadge, { backgroundColor: colors.tint }]}>
               <Feather name={iconName as any} size={12} color="#fff" />
@@ -312,15 +328,14 @@ export default function PlaceDetailScreen() {
               <Text style={styles.heroCityText}>{place.cityName}</Text>
             </View>
           </View>
-
-          {/* Floating 360° VR button on hero image */}
+          {/* Floating 360° VR button */}
           {place.video360Url && (
             <TouchableOpacity onPress={handleOpenVR} style={styles.vrHeroFloat} activeOpacity={0.82}>
               <Ionicons name="glasses" size={20} color="#fff" />
               <Text style={styles.vrHeroFloatText}>360°</Text>
             </TouchableOpacity>
           )}
-        </View>
+        </PlaceCarousel>
 
         {/* Content */}
         <View style={styles.content}>

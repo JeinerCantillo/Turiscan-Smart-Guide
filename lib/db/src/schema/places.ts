@@ -21,6 +21,7 @@ export const placesTable = pgTable("places", {
   video360Url: text("video_360_url"),
   avgRating: numeric("avg_rating", { precision: 3, scale: 2 }).default("0"),
   reviewCount: integer("review_count").default(0),
+  galleryUrls: text("gallery_urls"),
 });
 
 export const insertPlaceSchema = createInsertSchema(placesTable).omit({ id: true });

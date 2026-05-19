@@ -21,7 +21,6 @@ import Colors from "@/constants/colors";
 import { useGetPlaces } from "@workspace/api-client-react";
 import type { Place } from "@workspace/api-client-react";
 import { useAuth } from "@/context/AuthContext";
-import { GuideAvatar } from "@/components/GuideAvatar";
 
 const { width } = Dimensions.get("window");
 const CARD_WIDTH = width * 0.72;
@@ -184,10 +183,6 @@ export default function ExploreScreen() {
             )}
           </View>
           <View style={styles.headerRight}>
-            <GuideAvatar
-              message={user ? `¡Bienvenido! Explora los mejores lugares de Ciénaga.` : "Escanea un código QR o explora los sitios turísticos de Ciénaga"}
-              autoAnimate
-            />
             <TouchableOpacity
               onPress={handleScan}
               style={[styles.scanButton, { backgroundColor: colors.tint }]}
