@@ -113,7 +113,7 @@ const reviewStyles = StyleSheet.create({
 });
 
 export default function PlaceDetailScreen() {
-  const { id, qrCode } = useLocalSearchParams<{ id: string; qrCode?: string }>();
+  const { id, qrCode, autoSpeak } = useLocalSearchParams<{ id: string; qrCode?: string; autoSpeak?: string }>();
   const colorScheme = useColorScheme();
   const isDark = colorScheme === "dark";
   const colors = isDark ? Colors.dark : Colors.light;
@@ -153,6 +153,13 @@ export default function PlaceDetailScreen() {
   useEffect(() => {
     return () => { Speech.stop(); };
   }, []);
+
+  useEffect(() => {
+    if (autoSpeak === "1" && place && !isSpeaking) {
+      const timer = setTimeout(() => handleSpeak(), 600);
+      return () => clearTimeout(timer);
+    }
+  }, [autoSpeak, place?.id]);
 
   useEffect(() => {
     if (place?.id) fetchReviews(place.id);
@@ -305,6 +312,14 @@ export default function PlaceDetailScreen() {
               <Text style={styles.heroCityText}>{place.cityName}</Text>
             </View>
           </View>
+
+          {/* Floating 360° VR button on hero image */}
+          {place.video360Url && (
+            <TouchableOpacity onPress={handleOpenVR} style={styles.vrHeroFloat} activeOpacity={0.82}>
+              <Ionicons name="glasses" size={20} color="#fff" />
+              <Text style={styles.vrHeroFloatText}>360°</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         {/* Content */}
@@ -362,6 +377,22 @@ export default function PlaceDetailScreen() {
             </View>
           </TouchableOpacity>
 
+          {/* Prominent VR card — right below narration */}
+          {place.video360Url && (
+            <TouchableOpacity onPress={handleOpenVR} style={styles.vrCard} activeOpacity={0.85}>
+              <View style={styles.vrCardLeft}>
+                <View style={styles.vrCardIconCircle}>
+                  <Ionicons name="glasses" size={26} color="#fff" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.vrCardTitle}>Ver en Realidad Virtual 360°</Text>
+                  <Text style={styles.vrCardSub}>Experiencia de video inmersivo del lugar</Text>
+                </View>
+              </View>
+              <Feather name="play-circle" size={30} color="rgba(255,255,255,0.8)" />
+            </TouchableOpacity>
+          )}
+
           {/* Visit info */}
           {(place.visitHours || place.visitDuration) && (
             <View style={styles.visitInfoRow}>
@@ -411,20 +442,6 @@ export default function PlaceDetailScreen() {
               />
             </View>
           </View>
-
-          {/* VR button */}
-          {place.video360Url && (
-            <TouchableOpacity onPress={handleOpenVR} style={[styles.vrBtn, { backgroundColor: "#0D1B2A" }]} activeOpacity={0.85}>
-              <View style={styles.vrBtnLeft}>
-                <Ionicons name="glasses" size={26} color="#fff" />
-                <View>
-                  <Text style={styles.vrBtnTitle}>Realidad Virtual 360°</Text>
-                  <Text style={styles.vrBtnSub}>Visita este lugar de forma inmersiva</Text>
-                </View>
-              </View>
-              <Feather name="chevron-right" size={18} color="rgba(255,255,255,0.5)" />
-            </TouchableOpacity>
-          )}
 
           {/* Reviews section */}
           <View style={styles.reviewsSection}>
@@ -565,10 +582,35 @@ const styles = StyleSheet.create({
   mapSection: { marginBottom: 20 },
   mapContainer: { borderRadius: 16, overflow: "hidden", borderWidth: 1 },
   miniMap: { width: "100%", height: 180 },
-  vrBtn: { flexDirection: "row", alignItems: "center", justifyContent: "space-between", padding: 16, borderRadius: 16, marginBottom: 20, gap: 12 },
-  vrBtnLeft: { flexDirection: "row", alignItems: "center", gap: 14, flex: 1 },
-  vrBtnTitle: { color: "#fff", fontSize: 15, fontFamily: "Inter_700Bold" },
-  vrBtnSub: { color: "rgba(255,255,255,0.6)", fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
+  vrHeroFloat: {
+    position: "absolute",
+    bottom: 16,
+    right: 16,
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 6,
+    backgroundColor: "rgba(13,27,42,0.85)",
+    borderRadius: 22,
+    paddingHorizontal: 14,
+    paddingVertical: 9,
+    borderWidth: 1,
+    borderColor: "rgba(255,255,255,0.25)",
+  },
+  vrHeroFloatText: { color: "#fff", fontSize: 14, fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
+  vrCard: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    backgroundColor: "#0D1B2A",
+    padding: 16,
+    borderRadius: 18,
+    marginBottom: 16,
+    gap: 12,
+  },
+  vrCardLeft: { flexDirection: "row", alignItems: "center", gap: 14, flex: 1 },
+  vrCardIconCircle: { width: 50, height: 50, borderRadius: 25, backgroundColor: "rgba(26,95,122,0.8)", alignItems: "center", justifyContent: "center" },
+  vrCardTitle: { color: "#fff", fontSize: 14, fontFamily: "Inter_700Bold" },
+  vrCardSub: { color: "rgba(255,255,255,0.6)", fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
   reviewsSection: { marginBottom: 24, gap: 12 },
   reviewCountLabel: { fontSize: 14, fontFamily: "Inter_400Regular", marginLeft: 4 },
   reviewForm: { borderRadius: 16, padding: 16, borderWidth: 1, gap: 12 },
