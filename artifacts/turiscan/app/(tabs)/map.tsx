@@ -77,11 +77,20 @@ export default function MapScreen() {
   const [radiusKm, setRadiusKm] = useState(10);
   const [showRadiusPanel, setShowRadiusPanel] = useState(false);
   const [locating, setLocating] = useState(false);
+  const [centerOnUser, setCenterOnUser] = useState(false);
+  const locationWatcher = useRef<Location.LocationSubscription | null>(null);
 
   const sheetAnim = useRef(new Animated.Value(SHEET_HEIGHT)).current;
   const sheetVisible = useRef(false);
 
   const { data: places } = useGetPlaces({});
+
+  // Clean up watcher on unmount
+  useEffect(() => {
+    return () => {
+      locationWatcher.current?.remove();
+    };
+  }, []);
 
   const requestLocation = async () => {
     setLocating(true);
@@ -91,14 +100,45 @@ export default function MapScreen() {
         setLocating(false);
         return;
       }
-      const loc = await Location.getCurrentPositionAsync({ accuracy: Location.Accuracy.Balanced });
-      setUserLocation({ latitude: loc.coords.latitude, longitude: loc.coords.longitude });
+
+      // Stop any existing watcher first
+      locationWatcher.current?.remove();
+      locationWatcher.current = null;
+
+      // Get an immediate high-accuracy fix so the dot appears right away
+      const snap = await Location.getCurrentPositionAsync({
+        accuracy: Location.Accuracy.BestForNavigation,
+      });
+      setUserLocation({ latitude: snap.coords.latitude, longitude: snap.coords.longitude });
       setShowRadiusPanel(true);
-    } catch {}
-    setLocating(false);
+      setLocating(false);
+      // Trigger a one-shot map centre animation, then turn it off so
+      // subsequent watcher updates don't keep dragging the map back
+      setCenterOnUser(true);
+      setTimeout(() => setCenterOnUser(false), 1500);
+
+      // Then keep watching so the dot moves in real time
+      locationWatcher.current = await Location.watchPositionAsync(
+        {
+          accuracy: Location.Accuracy.BestForNavigation,
+          distanceInterval: 1,   // update every 1 metre of movement
+          timeInterval: 1000,    // or every 1 second, whichever comes first
+        },
+        (loc) => {
+          setUserLocation({
+            latitude: loc.coords.latitude,
+            longitude: loc.coords.longitude,
+          });
+        }
+      );
+    } catch {
+      setLocating(false);
+    }
   };
 
   const clearLocation = () => {
+    locationWatcher.current?.remove();
+    locationWatcher.current = null;
     setUserLocation(null);
     setShowRadiusPanel(false);
   };
@@ -306,7 +346,7 @@ export default function MapScreen() {
           selectedIndex={selectedIndex}
           showsUserLocation={!!userLocation}
           userLocation={userLocation}
-          animateToUser={!!userLocation}
+          animateToUser={centerOnUser}
         />
       </TouchableOpacity>
 

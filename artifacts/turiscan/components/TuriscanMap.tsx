@@ -55,7 +55,9 @@ export function TuriscanMap({
 }: Props) {
   const mapRef = useRef<MapView>(null);
 
-  // Animate map to user position when it becomes available
+  // Animate map to user position only when animateToUser flips to true.
+  // Intentionally NOT listing userLocation so the map doesn't re-centre
+  // on every GPS update while the user is scrolling around.
   useEffect(() => {
     if (animateToUser && userLocation && mapRef.current) {
       mapRef.current.animateToRegion(
@@ -68,7 +70,8 @@ export function TuriscanMap({
         900
       );
     }
-  }, [userLocation, animateToUser]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [animateToUser]);
 
   return (
     <MapView
