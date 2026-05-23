@@ -1,6 +1,6 @@
-import React from "react";
-import { View, Text, StyleSheet, TouchableOpacity } from "react-native";
-import MapView, { Marker, Callout } from "react-native-maps";
+import React, { useRef, useEffect, forwardRef } from "react";
+import { View, StyleSheet } from "react-native";
+import MapView, { Marker, Circle } from "react-native-maps";
 
 export type MapPoint = {
   latitude: number;
@@ -21,6 +21,9 @@ type Props = {
   tintColor?: string;
   onMarkerPress?: (point: MapPoint, index: number) => void;
   selectedIndex?: number;
+  showsUserLocation?: boolean;
+  userLocation?: { latitude: number; longitude: number } | null;
+  animateToUser?: boolean;
 };
 
 const CATEGORY_COLORS: Record<string, string> = {
@@ -46,9 +49,30 @@ export function TuriscanMap({
   tintColor,
   onMarkerPress,
   selectedIndex,
+  showsUserLocation = false,
+  userLocation,
+  animateToUser = false,
 }: Props) {
+  const mapRef = useRef<MapView>(null);
+
+  // Animate map to user position when it becomes available
+  useEffect(() => {
+    if (animateToUser && userLocation && mapRef.current) {
+      mapRef.current.animateToRegion(
+        {
+          latitude: userLocation.latitude,
+          longitude: userLocation.longitude,
+          latitudeDelta: 0.005,
+          longitudeDelta: 0.005,
+        },
+        900
+      );
+    }
+  }, [userLocation, animateToUser]);
+
   return (
     <MapView
+      ref={mapRef}
       style={[styles.map, style]}
       initialRegion={{
         latitude,
@@ -58,6 +82,8 @@ export function TuriscanMap({
       }}
       scrollEnabled={scrollEnabled}
       zoomEnabled={zoomEnabled}
+      showsUserLocation={showsUserLocation}
+      showsMyLocationButton={false}
     >
       {allPoints ? (
         allPoints.map((pt, i) => {
@@ -70,25 +96,47 @@ export function TuriscanMap({
               onPress={() => onMarkerPress?.(pt, i)}
               zIndex={isSelected ? 10 : 1}
             >
-              <View style={[
-                styles.customMarker,
-                { backgroundColor: color, borderColor: "#fff" },
-                isSelected && styles.customMarkerSelected,
-              ]}>
+              <View
+                style={[
+                  styles.customMarker,
+                  { backgroundColor: color, borderColor: "#fff" },
+                  isSelected && styles.customMarkerSelected,
+                ]}
+              >
                 <View style={[styles.markerDot, { backgroundColor: "#fff" }]} />
               </View>
             </Marker>
           );
         })
       ) : (
-        <Marker
-          coordinate={{ latitude, longitude }}
-          title={title}
-        >
-          <View style={[styles.customMarker, { backgroundColor: tintColor ?? "#1A6B4A", borderColor: "#fff" }]}>
+        <Marker coordinate={{ latitude, longitude }} title={title}>
+          <View
+            style={[
+              styles.customMarker,
+              { backgroundColor: tintColor ?? "#1A6B4A", borderColor: "#fff" },
+            ]}
+          >
             <View style={[styles.markerDot, { backgroundColor: "#fff" }]} />
           </View>
         </Marker>
+      )}
+
+      {/* Fallback user-location marker (for web where showsUserLocation doesn't work) */}
+      {userLocation && (
+        <>
+          <Circle
+            center={userLocation}
+            radius={60}
+            strokeColor="rgba(26,95,122,0.3)"
+            fillColor="rgba(26,95,122,0.12)"
+            strokeWidth={1}
+          />
+          <Marker coordinate={userLocation} zIndex={20} anchor={{ x: 0.5, y: 0.5 }}>
+            <View style={styles.userMarkerOuter}>
+              <View style={[styles.userMarkerInner, { backgroundColor: tintColor ?? "#1A5F7A" }]} />
+            </View>
+          </Marker>
+        </>
       )}
     </MapView>
   );
@@ -111,9 +159,25 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     borderWidth: 4,
   },
-  markerDot: {
-    width: 8,
-    height: 8,
-    borderRadius: 4,
+  markerDot: { width: 8, height: 8, borderRadius: 4 },
+  userMarkerOuter: {
+    width: 22,
+    height: 22,
+    borderRadius: 11,
+    backgroundColor: "rgba(255,255,255,0.9)",
+    alignItems: "center",
+    justifyContent: "center",
+    borderWidth: 2,
+    borderColor: "#1A5F7A",
+    shadowColor: "#000",
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.25,
+    shadowRadius: 4,
+    elevation: 6,
+  },
+  userMarkerInner: {
+    width: 12,
+    height: 12,
+    borderRadius: 6,
   },
 });

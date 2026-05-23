@@ -304,6 +304,9 @@ export default function MapScreen() {
           tintColor={colors.tint}
           onMarkerPress={handleMarkerPress}
           selectedIndex={selectedIndex}
+          showsUserLocation={!!userLocation}
+          userLocation={userLocation}
+          animateToUser={!!userLocation}
         />
       </TouchableOpacity>
 
