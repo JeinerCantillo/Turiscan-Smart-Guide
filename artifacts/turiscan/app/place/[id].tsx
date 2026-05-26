@@ -14,6 +14,7 @@ import {
   TextInput,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
+import { LinearGradient } from "expo-linear-gradient";
 import { Feather, Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import * as Haptics from "expo-haptics";
@@ -250,6 +251,13 @@ export default function PlaceDetailScreen() {
     router.push({ pathname: "/vr/[id]", params: { id: String(place.id) } });
   };
 
+  const handleOpenAR = () => {
+    if (!place) return;
+    Speech.stop();
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    router.push({ pathname: "/ar/[id]", params: { id: String(place.id) } });
+  };
+
   if (isLoading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
@@ -392,7 +400,30 @@ export default function PlaceDetailScreen() {
             </View>
           </TouchableOpacity>
 
-          {/* Prominent VR card — right below narration */}
+          {/* ★ AR Card — always visible, premium feature */}
+          <TouchableOpacity onPress={handleOpenAR} style={styles.arCard} activeOpacity={0.85}>
+            <LinearGradient
+              colors={["#040D14", "#0A1E30", "#0D2840"]}
+              start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+              style={styles.arCardGradient}
+            >
+              <View style={styles.arCardLeft}>
+                <View style={styles.arCardIconCircle}>
+                  <Ionicons name="camera" size={26} color="#1AEFFF" />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <View style={styles.arCardBadge}>
+                    <Text style={styles.arCardBadgeText}>NUEVO</Text>
+                  </View>
+                  <Text style={styles.arCardTitle}>Ver en Realidad Aumentada</Text>
+                  <Text style={styles.arCardSub}>Avatar 3D · Tarjetas flotantes · Narración IA</Text>
+                </View>
+              </View>
+              <Ionicons name="chevron-forward" size={22} color="rgba(26,239,255,0.7)" />
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Prominent VR card — right below AR card */}
           {place.video360Url && (
             <TouchableOpacity onPress={handleOpenVR} style={styles.vrCard} activeOpacity={0.85}>
               <View style={styles.vrCardLeft}>
@@ -612,6 +643,40 @@ const styles = StyleSheet.create({
     borderColor: "rgba(255,255,255,0.25)",
   },
   vrHeroFloatText: { color: "#fff", fontSize: 14, fontFamily: "Inter_700Bold", letterSpacing: 0.5 },
+  arCard: {
+    borderRadius: 18,
+    marginBottom: 12,
+    overflow: "hidden",
+    borderWidth: 1,
+    borderColor: "rgba(26,239,255,0.35)",
+    shadowColor: "#1AEFFF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+  arCardGradient: {
+    flexDirection: "row",
+    alignItems: "center",
+    justifyContent: "space-between",
+    padding: 16,
+    gap: 12,
+  },
+  arCardLeft: { flexDirection: "row", alignItems: "center", gap: 14, flex: 1 },
+  arCardIconCircle: {
+    width: 50, height: 50, borderRadius: 25,
+    backgroundColor: "rgba(26,239,255,0.18)",
+    borderWidth: 1, borderColor: "rgba(26,239,255,0.4)",
+    alignItems: "center", justifyContent: "center",
+  },
+  arCardBadge: {
+    backgroundColor: "#1AEFFF",
+    paddingHorizontal: 6, paddingVertical: 2,
+    borderRadius: 4, alignSelf: "flex-start", marginBottom: 4,
+  },
+  arCardBadgeText: { color: "#040D14", fontSize: 8, fontFamily: "Inter_700Bold", letterSpacing: 1.5 },
+  arCardTitle: { color: "#fff", fontSize: 14, fontFamily: "Inter_700Bold" },
+  arCardSub: { color: "rgba(26,239,255,0.75)", fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
   vrCard: {
     flexDirection: "row",
     alignItems: "center",

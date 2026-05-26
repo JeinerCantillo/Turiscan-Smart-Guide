@@ -87,6 +87,12 @@ export default function ScanResultScreen() {
     router.replace({ pathname: "/place/[id]", params: { id: String(place.id), autoSpeak: "1" } });
   };
 
+  const handleOpenAR = () => {
+    if (!place) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    router.replace({ pathname: "/ar/[id]", params: { id: String(place.id) } });
+  };
+
   const handleWatch360 = () => {
     if (!place) return;
     if (!place.video360Url) {
@@ -183,6 +189,24 @@ export default function ScanResultScreen() {
           },
         ]}
       >
+        {/* ★ AR Experience — primary CTA */}
+        <TouchableOpacity
+          style={styles.arBtn}
+          onPress={handleOpenAR}
+          activeOpacity={0.85}
+        >
+          <View style={[styles.actionBtnIcon, { backgroundColor: "rgba(26,239,255,0.25)" }]}>
+            <Ionicons name="camera" size={28} color="#1AEFFF" />
+          </View>
+          <View style={styles.actionBtnText}>
+            <Text style={[styles.actionBtnTitle, { color: "#fff" }]}>Ver en Realidad Aumentada</Text>
+            <Text style={[styles.actionBtnSub, { color: "rgba(26,239,255,0.85)" }]}>
+              Avatar 3D · Tarjetas flotantes · Narración
+            </Text>
+          </View>
+          <Ionicons name="chevron-forward" size={18} color="rgba(26,239,255,0.7)" />
+        </TouchableOpacity>
+
         {/* Listen to history */}
         <TouchableOpacity
           style={[styles.actionBtnLarge, { backgroundColor: colors.tint }]}
@@ -197,34 +221,6 @@ export default function ScanResultScreen() {
             <Text style={styles.actionBtnSub}>Narración de audio del lugar</Text>
           </View>
           <Feather name="chevron-right" size={18} color="rgba(255,255,255,0.7)" />
-        </TouchableOpacity>
-
-        {/* Watch 360° */}
-        <TouchableOpacity
-          style={[
-            styles.actionBtnLarge,
-            {
-              backgroundColor: place.video360Url ? "#0D1B2A" : colors.backgroundCard,
-              borderColor: colors.border,
-              borderWidth: place.video360Url ? 0 : 1,
-              opacity: place.video360Url ? 1 : 0.6,
-            },
-          ]}
-          onPress={handleWatch360}
-          activeOpacity={0.85}
-        >
-          <View style={[styles.actionBtnIcon, { backgroundColor: "rgba(26,95,122,0.5)" }]}>
-            <Ionicons name="glasses" size={28} color={place.video360Url ? "#fff" : colors.textMuted} />
-          </View>
-          <View style={styles.actionBtnText}>
-            <Text style={[styles.actionBtnTitle, { color: place.video360Url ? "#fff" : colors.text }]}>
-              Ver en 360°
-            </Text>
-            <Text style={[styles.actionBtnSub, { color: place.video360Url ? "rgba(255,255,255,0.7)" : colors.textMuted }]}>
-              {place.video360Url ? "Experiencia de video inmersivo" : "Video no disponible aún"}
-            </Text>
-          </View>
-          <Feather name="chevron-right" size={18} color={place.video360Url ? "rgba(255,255,255,0.7)" : colors.textMuted} />
         </TouchableOpacity>
 
         {/* View full details */}
@@ -313,6 +309,21 @@ const styles = StyleSheet.create({
   actionBtnText: { flex: 1 },
   actionBtnTitle: { color: "#fff", fontSize: 16, fontFamily: "Inter_700Bold" },
   actionBtnSub: { color: "rgba(255,255,255,0.7)", fontSize: 12, fontFamily: "Inter_400Regular", marginTop: 2 },
+  arBtn: {
+    flexDirection: "row",
+    alignItems: "center",
+    borderRadius: 18,
+    padding: 16,
+    gap: 14,
+    backgroundColor: "#040D14",
+    borderWidth: 1.5,
+    borderColor: "rgba(26,239,255,0.5)",
+    shadowColor: "#1AEFFF",
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.4,
+    shadowRadius: 14,
+    elevation: 8,
+  },
   detailsBtn: {
     flexDirection: "row",
     alignItems: "center",
