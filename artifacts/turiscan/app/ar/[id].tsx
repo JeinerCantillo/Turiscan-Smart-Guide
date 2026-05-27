@@ -177,7 +177,6 @@ function ARInfoCard({
   const scale   = useRef(new Animated.Value(isActive ? 1 : 0.88)).current;
   const opacity = useRef(new Animated.Value(isActive ? 1 : 0.4)).current;
   const rotY    = useRef(new Animated.Value(isActive ? 0 : offset * 7)).current;
-  const glowAnim = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -187,26 +186,14 @@ function ARInfoCard({
     ]).start();
   }, [isActive, offset]);
 
-  // Glow when speaking
-  useEffect(() => {
-    if (isActive && isSpeaking) {
-      const loop = Animated.loop(Animated.sequence([
-        Animated.timing(glowAnim, { toValue: 1, duration: 600, useNativeDriver: false }),
-        Animated.timing(glowAnim, { toValue: 0, duration: 600, useNativeDriver: false }),
-      ]));
-      loop.start();
-      return () => loop.stop();
-    } else {
-      glowAnim.setValue(0);
-    }
-  }, [isActive, isSpeaking]);
-
   if (Math.abs(offset) > 2) return null;
 
-  const borderColor = glowAnim.interpolate({
-    inputRange: [0, 1],
-    outputRange: ["rgba(255,255,255,0.18)", "rgba(26,239,255,0.8)"],
-  });
+  // Static border color — no Animated interpolation, avoids mixing native/JS drivers
+  const borderColor = isActive && isSpeaking
+    ? "rgba(26,239,255,0.85)"
+    : isActive
+      ? "rgba(255,255,255,0.28)"
+      : "rgba(255,255,255,0.10)";
 
   return (
     <Animated.View
