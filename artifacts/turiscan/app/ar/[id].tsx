@@ -323,16 +323,20 @@ export default function ARScreen() {
   const [showBubble, setShowBubble] = useState(false);
   const [muteToggle, setMuteToggle] = useState(false);
 
-  const avatarRef  = useRef<ARGuideCharacterRef>(null);
-  const swipeAnim  = useRef(new Animated.Value(0)).current;
-  const pulseAnim  = useRef(new Animated.Value(1)).current;
-  const muteRef    = useRef(false);
+  const avatarRef    = useRef<ARGuideCharacterRef>(null);
+  const swipeAnim    = useRef(new Animated.Value(0)).current;
+  const pulseAnim    = useRef(new Animated.Value(1)).current;
+  const muteRef      = useRef(false);
+  const cardIndexRef = useRef(0); // always-fresh ref to avoid stale closure in PanResponder
 
   const cards       = useMemo(() => (place ? buildCards(place) : []), [place]);
   const currentCard = cards[cardIndex];
 
-  // Keep muteRef in sync
-  useEffect(() => { muteRef.current = muteToggle; }, [muteToggle]);
+  // Keep refs in sync so closures always read fresh values
+  useEffect(() => { muteRef.current    = muteToggle; }, [muteToggle]);
+  useEffect(() => { cardIndexRef.current = cardIndex; }, [cardIndex]);
+  const cardsRef = useRef(cards);
+  useEffect(() => { cardsRef.current = cards; }, [cards]);
 
   // LIVE dot pulse
   useEffect(() => {
@@ -394,23 +398,28 @@ export default function ARScreen() {
   }, [cardIndex, scanning]);
 
   // ── Navigate to card ──
+  // Uses refs so PanResponder (created once) always has fresh values — no stale closure
   const goCard = useCallback((dir: 1 | -1) => {
-    const next = cardIndex + dir;
-    if (next < 0 || next >= cards.length) return;
+    const idx  = cardIndexRef.current;
+    const len  = cardsRef.current.length;
+    const next = idx + dir;
+    if (next < 0 || next >= len) return;
     Haptics.selectionAsync();
     Speech.stop();
     setIsSpeaking(false);
     avatarRef.current?.setSpeaking(false);
     avatarRef.current?.setPointing(false);
-
     Animated.sequence([
-      Animated.timing(swipeAnim, { toValue: -dir * SW, duration: 200, useNativeDriver: true }),
+      Animated.timing(swipeAnim, { toValue: -dir * SW, duration: 180, useNativeDriver: true }),
       Animated.timing(swipeAnim, { toValue:  dir * SW, duration: 0,   useNativeDriver: true }),
-      Animated.spring( swipeAnim, { toValue: 0,         useNativeDriver: true, tension: 60, friction: 9 }),
+      Animated.spring( swipeAnim, { toValue: 0, useNativeDriver: true, tension: 65, friction: 9 }),
     ]).start();
-
     setCardIndex(next);
-  }, [cardIndex, cards.length, swipeAnim]);
+  }, []); // no state deps — reads refs
+
+  // Always-fresh ref so PanResponder closure is never stale
+  const goCardRef = useRef(goCard);
+  useEffect(() => { goCardRef.current = goCard; }, [goCard]);
 
   // ── Tap card to narrate ──
   const handleCardTap = useCallback(() => {
@@ -430,14 +439,15 @@ export default function ARScreen() {
   }, [isSpeaking, currentCard, narrate]);
 
   // ── Full-screen swipe gesture ──
+  // PanResponder calls goCardRef.current so it always has the latest goCard
   const panResponder = useRef(
     PanResponder.create({
       onMoveShouldSetPanResponder: (_, gs) => Math.abs(gs.dx) > 14 && Math.abs(gs.dy) < 70,
-      onPanResponderMove:   (_, gs) => swipeAnim.setValue(gs.dx * 0.6),
+      onPanResponderMove:   (_, gs) => swipeAnim.setValue(gs.dx * 0.55),
       onPanResponderRelease: (_, gs) => {
-        if      (gs.dx < -60) goCard(1);
-        else if (gs.dx >  60) goCard(-1);
-        else Animated.spring(swipeAnim, { toValue: 0, useNativeDriver: true, tension: 60, friction: 9 }).start();
+        if      (gs.dx < -55) goCardRef.current(1);
+        else if (gs.dx >  55) goCardRef.current(-1);
+        else Animated.spring(swipeAnim, { toValue: 0, useNativeDriver: true, tension: 65, friction: 9 }).start();
       },
     })
   ).current;

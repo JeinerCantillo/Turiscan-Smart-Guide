@@ -58,8 +58,10 @@
   "dependencies": {
     "@react-native-community/slider": "^5.2.0",
     "expo-camera": "^17.0.10",
+    "expo-sensors": "^15.0.8",
     "expo-speech": "^14.0.8",
     "react-native-maps": "1.18.0",
+    "react-native-qrcode-svg": "^6.3.21",
     "react-native-webview": "^13.16.1"
   }
 }

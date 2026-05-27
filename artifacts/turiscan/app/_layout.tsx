@@ -32,6 +32,7 @@ function RootLayoutNav() {
       <Stack.Screen name="scanner" options={{ headerShown: false, presentation: "fullScreenModal" }} />
       <Stack.Screen name="vr" options={{ headerShown: false, presentation: "fullScreenModal" }} />
       <Stack.Screen name="ar/[id]" options={{ headerShown: false, presentation: "fullScreenModal" }} />
+      <Stack.Screen name="geo-ar" options={{ headerShown: false, presentation: "fullScreenModal" }} />
       <Stack.Screen name="scan-result" options={{ headerShown: false }} />
       <Stack.Screen name="login" options={{ headerShown: false }} />
       <Stack.Screen name="register" options={{ headerShown: false }} />

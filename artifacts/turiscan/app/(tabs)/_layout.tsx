@@ -15,19 +15,33 @@ function ScanFABButton() {
   const colors = isDark ? Colors.dark : Colors.light;
 
   return (
-    <TouchableOpacity
-      onPress={() => {
-        Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-        router.push("/scanner");
-      }}
-      style={styles.fabWrapper}
-      activeOpacity={0.85}
-    >
-      <View style={[styles.fab, { backgroundColor: colors.tint, shadowColor: colors.tint }]}>
-        <Feather name="camera" size={26} color="#fff" />
-      </View>
-      <Text style={[styles.fabLabel, { color: colors.textMuted }]}>Escanear</Text>
-    </TouchableOpacity>
+    <View style={styles.fabWrapper}>
+      {/* Main geo-AR button */}
+      <TouchableOpacity
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+          router.push("/geo-ar");
+        }}
+        activeOpacity={0.85}
+      >
+        <View style={[styles.fab, { backgroundColor: colors.tint, shadowColor: colors.tint }]}>
+          <Feather name="aperture" size={26} color="#fff" />
+        </View>
+      </TouchableOpacity>
+      <Text style={[styles.fabLabel, { color: colors.textMuted }]}>AR · Escanear</Text>
+      {/* Small QR-only shortcut */}
+      <TouchableOpacity
+        onPress={() => {
+          Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+          router.push("/scanner");
+        }}
+        style={styles.fabQRChip}
+        activeOpacity={0.8}
+      >
+        <Feather name="maximize" size={11} color={colors.tint} />
+        <Text style={[styles.fabQRText, { color: colors.tint }]}>Solo QR</Text>
+      </TouchableOpacity>
+    </View>
   );
 }
 
@@ -128,8 +142,24 @@ const styles = StyleSheet.create({
     elevation: 10,
   },
   fabLabel: {
-    fontSize: 10,
+    fontSize: 9,
     fontFamily: "Inter_500Medium",
+    marginTop: 2,
+  },
+  fabQRChip: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 3,
+    paddingHorizontal: 7,
+    paddingVertical: 2,
+    borderRadius: 8,
+    borderWidth: 1,
+    borderColor: "rgba(26,95,122,0.4)",
+    backgroundColor: "rgba(26,95,122,0.08)",
     marginTop: 3,
+  },
+  fabQRText: {
+    fontSize: 8,
+    fontFamily: "Inter_500Medium",
   },
 });
