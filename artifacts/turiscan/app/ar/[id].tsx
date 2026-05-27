@@ -15,6 +15,7 @@ import {
   PanResponder,
   Platform,
   StatusBar,
+  ActivityIndicator,
 } from "react-native";
 import { router, useLocalSearchParams } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -359,7 +360,7 @@ export default function ARScreen() {
   const insets = useSafeAreaInsets();
   const [camPermission, requestCamPermission] = useCameraPermissions();
 
-  const { data: place, isLoading } = useGetPlaceById({ id: Number(id) });
+  const { data: place, isLoading, isError } = useGetPlaceById(Number(id));
 
   const [scanning, setScanning] = useState(true);
   const [cardIndex, setCardIndex] = useState(0);
@@ -490,11 +491,24 @@ export default function ARScreen() {
   };
 
   // ── LOADING ──
-  if (isLoading || !place) {
+  if (isLoading) {
     return (
       <View style={styles.loadingScreen}>
-        <Feather name="loader" size={32} color="#1AEFFF" />
+        <ActivityIndicator size="large" color="#1AEFFF" />
         <Text style={styles.loadingText}>Iniciando AR…</Text>
+      </View>
+    );
+  }
+
+  // ── ERROR / NOT FOUND ──
+  if (isError || !place) {
+    return (
+      <View style={styles.loadingScreen}>
+        <Ionicons name="alert-circle-outline" size={48} color="#1AEFFF" />
+        <Text style={styles.loadingText}>No se pudo cargar el lugar</Text>
+        <TouchableOpacity onPress={() => router.back()} style={styles.errorBackBtn}>
+          <Text style={styles.errorBackText}>Volver</Text>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -648,6 +662,8 @@ const styles = StyleSheet.create({
   root: { flex: 1, backgroundColor: "#000" },
   loadingScreen: { flex: 1, backgroundColor: "#040D14", alignItems: "center", justifyContent: "center", gap: 16 },
   loadingText: { color: "#1AEFFF", fontFamily: "Inter_600SemiBold", fontSize: 16 },
+  errorBackBtn: { marginTop: 8, paddingHorizontal: 28, paddingVertical: 12, borderRadius: 24, borderWidth: 1.5, borderColor: "#1AEFFF" },
+  errorBackText: { color: "#1AEFFF", fontFamily: "Inter_600SemiBold", fontSize: 15 },
 
   cornersOverlay: {
     position: "absolute",

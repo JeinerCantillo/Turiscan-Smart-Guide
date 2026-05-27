@@ -60,14 +60,15 @@ export function TuriscanMap({
   // on every GPS update while the user is scrolling around.
   useEffect(() => {
     if (animateToUser && userLocation && mapRef.current) {
+      // Zoom very close so the 3m accuracy circle is clearly visible
       mapRef.current.animateToRegion(
         {
           latitude: userLocation.latitude,
           longitude: userLocation.longitude,
-          latitudeDelta: 0.005,
-          longitudeDelta: 0.005,
+          latitudeDelta: 0.00025,
+          longitudeDelta: 0.00025,
         },
-        900
+        1100
       );
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -124,14 +125,21 @@ export function TuriscanMap({
         </Marker>
       )}
 
-      {/* Fallback user-location marker (for web where showsUserLocation doesn't work) */}
+      {/* User location: 3m accuracy circle + outer soft ring */}
       {userLocation && (
         <>
           <Circle
             center={userLocation}
-            radius={60}
-            strokeColor="rgba(26,95,122,0.3)"
-            fillColor="rgba(26,95,122,0.12)"
+            radius={3}
+            strokeColor="rgba(26,239,255,0.9)"
+            fillColor="rgba(26,239,255,0.20)"
+            strokeWidth={2}
+          />
+          <Circle
+            center={userLocation}
+            radius={12}
+            strokeColor="rgba(26,239,255,0.25)"
+            fillColor="rgba(26,239,255,0.05)"
             strokeWidth={1}
           />
           <Marker coordinate={userLocation} zIndex={20} anchor={{ x: 0.5, y: 0.5 }}>

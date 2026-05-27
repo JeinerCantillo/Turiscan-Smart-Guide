@@ -1,4 +1,4 @@
-import React, { useRef, useEffect, forwardRef, useImperativeHandle } from "react";
+import React, { useRef, forwardRef, useImperativeHandle } from "react";
 import { View, StyleSheet, Platform } from "react-native";
 import { WebView } from "react-native-webview";
 
@@ -23,298 +23,250 @@ const AVATAR_HTML = `<!DOCTYPE html>
 </style>
 </head>
 <body>
+<canvas id="c"></canvas>
 <script>
-var s=document.createElement('script');
-s.src='https://cdn.jsdelivr.net/npm/three@0.128.0/build/three.min.js';
-s.onload=init;
-document.head.appendChild(s);
+var cv=document.getElementById('c');
+var cx=cv.getContext('2d');
+var W=window.innerWidth,H=window.innerHeight;
+cv.width=W; cv.height=H;
 
-function init(){
-  var W=window.innerWidth,H=window.innerHeight;
-  var renderer=new THREE.WebGLRenderer({antialias:true,alpha:true});
-  renderer.setSize(W,H);
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio,2));
-  renderer.shadowMap.enabled=true;
-  renderer.shadowMap.type=THREE.PCFSoftShadowMap;
-  document.body.appendChild(renderer.domElement);
+var speaking=false,pointing=false,t=0;
 
-  var scene=new THREE.Scene();
-  var camera=new THREE.PerspectiveCamera(42,W/H,0.1,100);
-  camera.position.set(0,0.8,3.8);
-  camera.lookAt(0,0.7,0);
-
-  /* ---- LIGHTS ---- */
-  scene.add(new THREE.AmbientLight(0x4488aa,0.5));
-  var sun=new THREE.DirectionalLight(0xfff5e0,1.1);
-  sun.position.set(2,5,3);
-  sun.castShadow=true;
-  scene.add(sun);
-  var tealPt=new THREE.PointLight(0x1A5F7A,2.0,12);
-  tealPt.position.set(-2,2,2);
-  scene.add(tealPt);
-  var goldPt=new THREE.PointLight(0xF4D03F,1.2,10);
-  goldPt.position.set(2.5,1.5,1.5);
-  scene.add(goldPt);
-  scene.add(new THREE.HemisphereLight(0x1A5F7A,0x8B5E3C,0.4));
-
-  /* ---- MATERIALS ---- */
-  var skinM  =new THREE.MeshPhongMaterial({color:0xC0805A,shininess:50});
-  var tealM  =new THREE.MeshPhongMaterial({color:0x1A5F7A,shininess:70});
-  var goldM  =new THREE.MeshPhongMaterial({color:0xE8C000,shininess:100});
-  var creamM =new THREE.MeshPhongMaterial({color:0xF2EDD0,shininess:20});
-  var blackM =new THREE.MeshPhongMaterial({color:0x111111,shininess:10});
-  var eyeM   =new THREE.MeshPhongMaterial({color:0x1E0A00,shininess:150});
-  var whiteM =new THREE.MeshPhongMaterial({color:0xFFFFFF,shininess:120});
-  var darkM  =new THREE.MeshPhongMaterial({color:0x1E2D3D,shininess:40});
-  var brownM =new THREE.MeshPhongMaterial({color:0x4A2800,shininess:60});
-  var mapPaperM=new THREE.MeshPhongMaterial({color:0xF9F0D0,shininess:20});
-
-  var G=new THREE.Group();
-  scene.add(G);
-
-  /* ---- LEGS ---- */
-  var legG=new THREE.CylinderGeometry(0.10,0.10,0.52,16);
-  var lLeg=new THREE.Mesh(legG,darkM); lLeg.position.set(-0.13,-0.26,0); lLeg.castShadow=true; G.add(lLeg);
-  var rLeg=new THREE.Mesh(legG,darkM); rLeg.position.set( 0.13,-0.26,0); rLeg.castShadow=true; G.add(rLeg);
-  var shoeG=new THREE.BoxGeometry(0.15,0.09,0.22);
-  var lShoe=new THREE.Mesh(shoeG,brownM); lShoe.position.set(-0.13,-0.55,0.03); G.add(lShoe);
-  var rShoe=new THREE.Mesh(shoeG,brownM); rShoe.position.set( 0.13,-0.55,0.03); G.add(rShoe);
-
-  /* ---- BODY ---- */
-  var bodyG=new THREE.CylinderGeometry(0.27,0.30,0.60,24);
-  var body=new THREE.Mesh(bodyG,tealM); body.position.y=0.30; body.castShadow=true; G.add(body);
-
-  /* belt */
-  var beltG=new THREE.CylinderGeometry(0.28,0.28,0.06,24);
-  var belt=new THREE.Mesh(beltG,goldM); belt.position.y=0.02; G.add(belt);
-
-  /* collar / ruana line */
-  var colG=new THREE.TorusGeometry(0.14,0.035,8,24);
-  var col=new THREE.Mesh(colG,goldM); col.position.y=0.60; col.rotation.x=Math.PI/2; G.add(col);
-
-  /* ---- MOCHILA WAYUU (back bag) ---- */
-  var bagGroup=new THREE.Group(); bagGroup.position.set(0,0.28,-0.33); G.add(bagGroup);
-  var bagBodyG=new THREE.BoxGeometry(0.26,0.30,0.10);
-  var bagBody=new THREE.Mesh(bagBodyG,new THREE.MeshPhongMaterial({color:0xC0392B,shininess:20}));
-  bagGroup.add(bagBody);
-  var stripeColors=[0xF4D03F,0x27AE60,0x9B59B6,0xE67E22,0xF4D03F];
-  stripeColors.forEach(function(c,i){
-    var sg=new THREE.BoxGeometry(0.26,0.038,0.005);
-    var sm=new THREE.Mesh(sg,new THREE.MeshPhongMaterial({color:c}));
-    sm.position.set(0,0.12-i*0.058,0.052);
-    bagGroup.add(sm);
-  });
-  /* strap */
-  var strapG=new THREE.BoxGeometry(0.04,0.48,0.04);
-  var strap=new THREE.Mesh(strapG,new THREE.MeshPhongMaterial({color:0x8B0000}));
-  strap.position.set(0,0.36,0.10); G.add(strap);
-
-  /* ---- LEFT ARM ---- */
-  var armG=new THREE.CapsuleGeometry(0.075,0.30,8,12);
-  var lArm=new THREE.Mesh(armG,tealM);
-  lArm.position.set(-0.37,0.28,0); lArm.rotation.z=0.25; lArm.castShadow=true; G.add(lArm);
-  var lHandG=new THREE.SphereGeometry(0.075,12,12);
-  var lHand=new THREE.Mesh(lHandG,skinM);
-  lHand.position.set(-0.44,0.04,0); G.add(lHand);
-
-  /* ---- RIGHT ARM + MAP ---- */
-  var rArmGroup=new THREE.Group();
-  rArmGroup.position.set(0.37,0.32,0); G.add(rArmGroup);
-  var rArmM=new THREE.Mesh(armG,tealM);
-  rArmM.rotation.z=-0.35; rArmM.rotation.x=0.2; rArmM.castShadow=true; rArmGroup.add(rArmM);
-  var rHandG=new THREE.SphereGeometry(0.075,12,12);
-  var rHand=new THREE.Mesh(rHandG,skinM);
-  rHand.position.set(0.13,-0.20,0.10); rArmGroup.add(rHand);
-  /* Map scroll */
-  var mapGroup=new THREE.Group();
-  mapGroup.position.set(0.17,-0.16,0.18);
-  mapGroup.rotation.set(0.1,-0.4,0.25);
-  rArmGroup.add(mapGroup);
-  var mapBgG=new THREE.BoxGeometry(0.24,0.19,0.015);
-  var mapBg=new THREE.Mesh(mapBgG,mapPaperM); mapGroup.add(mapBg);
-  var mapBorderG=new THREE.BoxGeometry(0.24,0.19,0.005);
-  var mapBorder=new THREE.Mesh(mapBorderG,new THREE.MeshPhongMaterial({color:0xD4AC0D}));
-  mapBorder.position.z=0.01; mapGroup.add(mapBorder);
-  /* map lines */
-  [[0,0.06],[0,0.00],[0,-0.06],[-0.07,0.03],[0.06,-0.03]].forEach(function(pos){
-    var lg=new THREE.BoxGeometry(0.12+Math.random()*0.06,0.008,0.004);
-    var lm=new THREE.Mesh(lg,new THREE.MeshPhongMaterial({color:0x1A5F7A}));
-    lm.position.set(pos[0],pos[1],0.012); mapGroup.add(lm);
-  });
-  /* map pin */
-  var pinG=new THREE.SphereGeometry(0.018,8,8);
-  var pin=new THREE.Mesh(pinG,new THREE.MeshPhongMaterial({color:0xE74C3C,shininess:100}));
-  pin.position.set(0.04,0.04,0.02); mapGroup.add(pin);
-
-  /* ---- NECK ---- */
-  var neckG=new THREE.CylinderGeometry(0.10,0.12,0.18,16);
-  var neck=new THREE.Mesh(neckG,skinM); neck.position.y=0.70; G.add(neck);
-
-  /* ---- HEAD ---- */
-  var headG=new THREE.SphereGeometry(0.30,32,32);
-  var head=new THREE.Mesh(headG,skinM); head.position.y=1.12; head.castShadow=true; G.add(head);
-
-  /* eyebrows */
-  var browG=new THREE.BoxGeometry(0.10,0.025,0.025);
-  var browM=new THREE.MeshPhongMaterial({color:0x2C1200});
-  var lBrow=new THREE.Mesh(browG,browM); lBrow.position.set(-0.10,1.23,0.28); lBrow.rotation.z= 0.15; G.add(lBrow);
-  var rBrow=new THREE.Mesh(browG,browM); rBrow.position.set( 0.10,1.23,0.28); rBrow.rotation.z=-0.15; G.add(rBrow);
-
-  /* eye whites */
-  var ewG=new THREE.SphereGeometry(0.065,16,16);
-  var lEW=new THREE.Mesh(ewG,whiteM); lEW.position.set(-0.10,1.14,0.26); G.add(lEW);
-  var rEW=new THREE.Mesh(ewG,whiteM); rEW.position.set( 0.10,1.14,0.26); G.add(rEW);
-  /* irises */
-  var irG=new THREE.SphereGeometry(0.042,16,16);
-  var lIr=new THREE.Mesh(irG,new THREE.MeshPhongMaterial({color:0x3D1C00,shininess:200}));
-  lIr.position.set(-0.10,1.14,0.30); G.add(lIr);
-  var rIr=new THREE.Mesh(irG,new THREE.MeshPhongMaterial({color:0x3D1C00,shininess:200}));
-  rIr.position.set( 0.10,1.14,0.30); G.add(rIr);
-  /* pupils */
-  var pupG=new THREE.SphereGeometry(0.022,8,8);
-  var lPup=new THREE.Mesh(pupG,eyeM); lPup.position.set(-0.10,1.14,0.335); G.add(lPup);
-  var rPup=new THREE.Mesh(pupG,eyeM); rPup.position.set( 0.10,1.14,0.335); G.add(rPup);
-  /* highlights */
-  var hlG=new THREE.SphereGeometry(0.010,6,6);
-  var hlM=new THREE.MeshPhongMaterial({color:0xFFFFFF,shininess:200,emissive:0xFFFFFF});
-  var lHL=new THREE.Mesh(hlG,hlM); lHL.position.set(-0.093,1.15,0.345); G.add(lHL);
-  var rHL=new THREE.Mesh(hlG,hlM); rHL.position.set( 0.107,1.15,0.345); G.add(rHL);
-
-  /* nose */
-  var noseG=new THREE.SphereGeometry(0.03,10,10);
-  var nose=new THREE.Mesh(noseG,new THREE.MeshPhongMaterial({color:0xAA7050,shininess:30}));
-  nose.position.set(0,1.05,0.30); G.add(nose);
-
-  /* smile (lower jaw) */
-  var smileG=new THREE.TorusGeometry(0.085,0.016,8,18,Math.PI);
-  var smileM=new THREE.MeshPhongMaterial({color:0x6B2D0A,shininess:40});
-  var smile=new THREE.Mesh(smileG,smileM);
-  smile.position.set(0,0.975,0.285); smile.rotation.z=Math.PI; G.add(smile);
-
-  /* teeth */
-  var teethG=new THREE.BoxGeometry(0.10,0.022,0.018);
-  var teethM=new THREE.MeshPhongMaterial({color:0xFFFAF0,shininess:80});
-  var teeth=new THREE.Mesh(teethG,teethM);
-  teeth.position.set(0,0.978,0.294); G.add(teeth);
-
-  /* ears */
-  var earG=new THREE.SphereGeometry(0.055,12,12);
-  var lEar=new THREE.Mesh(earG,skinM); lEar.position.set(-0.30,1.12,0); G.add(lEar);
-  var rEar=new THREE.Mesh(earG,skinM); rEar.position.set( 0.30,1.12,0); G.add(rEar);
-
-  /* ---- SOMBRERO VUELTIAO ---- */
-  var hatGroup=new THREE.Group(); hatGroup.position.y=1.36; G.add(hatGroup);
-  /* crown */
-  var crownG=new THREE.CylinderGeometry(0.23,0.27,0.30,32);
-  var crown=new THREE.Mesh(crownG,creamM); crown.position.y=0.18; hatGroup.add(crown);
-  /* brim - flat disk */
-  var brimG=new THREE.CylinderGeometry(0.60,0.60,0.038,40);
-  var brim=new THREE.Mesh(brimG,creamM); hatGroup.add(brim);
-  /* vueltiao woven pattern on brim */
-  var NUM_WEDGES=16;
-  for(var wi=0;wi<NUM_WEDGES;wi++){
-    var ang=(wi/NUM_WEDGES)*Math.PI*2;
-    var isBlack=wi%2===0;
-    var wColor=isBlack?0x111111:0xC8A200;
-    var wG=new THREE.BoxGeometry(0.042,0.044,0.56);
-    var wM=new THREE.MeshPhongMaterial({color:wColor,shininess:30});
-    var w=new THREE.Mesh(wG,wM);
-    w.position.set(Math.cos(ang)*0.30,0,Math.sin(ang)*0.30);
-    w.rotation.y=-ang; hatGroup.add(w);
-    /* inner crown stripe */
-    var cwG=new THREE.BoxGeometry(0.038,0.31,0.040);
-    var cw=new THREE.Mesh(cwG,new THREE.MeshPhongMaterial({color:isBlack?0x111111:0xD4AA00}));
-    cw.position.set(Math.cos(ang)*0.21,0.18,Math.sin(ang)*0.21);
-    cw.rotation.y=-ang; hatGroup.add(cw);
-  }
-  /* hat band gold */
-  var hbandG=new THREE.TorusGeometry(0.255,0.038,8,32);
-  var hband=new THREE.Mesh(hbandG,goldM); hband.position.y=0.04; hband.rotation.x=Math.PI/2; hatGroup.add(hband);
-
-  /* ---- PARTICLES ---- */
-  var pCount=80;
-  var pGeo=new THREE.BufferGeometry();
-  var pPos=new Float32Array(pCount*3);
-  var pCol=new Float32Array(pCount*3);
-  for(var pi=0;pi<pCount;pi++){
-    pPos[pi*3]  =(Math.random()-0.5)*5;
-    pPos[pi*3+1]= Math.random()*5-0.5;
-    pPos[pi*3+2]=(Math.random()-0.5)*4;
-    var isG=Math.random()>0.5;
-    pCol[pi*3]  =isG?0.95:0.10;
-    pCol[pi*3+1]=isG?0.87:0.37;
-    pCol[pi*3+2]=isG?0.15:0.48;
-  }
-  pGeo.setAttribute('position',new THREE.BufferAttribute(pPos,3));
-  pGeo.setAttribute('color',new THREE.BufferAttribute(pCol,3));
-  var pMat=new THREE.PointsMaterial({size:0.055,vertexColors:true,transparent:true,opacity:0.85});
-  var particles=new THREE.Points(pGeo,pMat);
-  scene.add(particles);
-
-  /* ---- STATE ---- */
-  var speaking=false, pointing=false, time=0;
-
-  function onMsg(e){
-    try{
-      var d=typeof e.data==='string'?JSON.parse(e.data):e.data;
-      if(d.type==='speak') speaking=!!d.value;
-      if(d.type==='point') pointing=!!d.value;
-    }catch(err){}
-  }
-  window.addEventListener('message',onMsg);
-  document.addEventListener('message',onMsg);
-
-  /* ---- LOOP ---- */
-  function animate(){
-    requestAnimationFrame(animate);
-    time+=0.016;
-
-    /* idle float */
-    G.position.y=Math.sin(time*1.1)*0.055;
-    G.rotation.y=Math.sin(time*0.65)*0.10;
-
-    /* speaking animation */
-    if(speaking){
-      head.position.y=1.12+Math.sin(time*9)*0.022;
-      smile.scale.y=1+Math.sin(time*9)*0.35;
-      teeth.position.y=0.978+Math.sin(time*9)*0.008;
-    } else {
-      head.position.y=1.12;
-      smile.scale.y=1;
-      teeth.position.y=0.978;
-    }
-
-    /* pointing animation */
-    if(pointing){
-      rArmGroup.rotation.x=0.55+Math.sin(time*3)*0.06;
-      rArmGroup.rotation.z=-0.55;
-    } else {
-      rArmGroup.rotation.x*=0.9;
-      rArmGroup.rotation.z*=0.9;
-    }
-
-    /* teal light pulsing */
-    tealPt.intensity=1.8+Math.sin(time*2.5)*0.4;
-
-    /* particles rise */
-    var pa=particles.geometry.attributes.position.array;
-    for(var i=1;i<pa.length;i+=3){
-      pa[i]+=0.006;
-      if(pa[i]>4.5) pa[i]=-0.5;
-    }
-    particles.geometry.attributes.position.needsUpdate=true;
-    particles.rotation.y+=0.003;
-
-    renderer.render(scene,camera);
-  }
-  animate();
-
-  window.addEventListener('resize',function(){
-    camera.aspect=window.innerWidth/window.innerHeight;
-    camera.updateProjectionMatrix();
-    renderer.setSize(window.innerWidth,window.innerHeight);
+/* particles */
+var pts=[];
+for(var i=0;i<55;i++){
+  pts.push({
+    x:Math.random()*W,
+    y:Math.random()*H,
+    vy:-(0.35+Math.random()*0.7),
+    sz:0.8+Math.random()*2.2,
+    col:Math.random()>0.5?'rgba(244,208,63,0.75)':'rgba(26,239,255,0.55)'
   });
 }
+
+function listen(e){
+  try{
+    var d=typeof e.data==='string'?JSON.parse(e.data):e.data;
+    if(d.type==='speak')speaking=!!d.value;
+    if(d.type==='point')pointing=!!d.value;
+  }catch(err){}
+}
+window.addEventListener('message',listen);
+document.addEventListener('message',listen);
+
+/* helpers */
+function el(ox,oy,rx,ry){cx.beginPath();cx.ellipse(ox,oy,rx,ry,0,0,Math.PI*2);}
+function rr(x,y,w,h,r){
+  r=Math.min(r,Math.min(w,h)/2);
+  cx.beginPath();
+  cx.moveTo(x+r,y);cx.lineTo(x+w-r,y);
+  cx.arc(x+w-r,y+r,r,-Math.PI/2,0);
+  cx.lineTo(x+w,y+h-r);
+  cx.arc(x+w-r,y+h-r,r,0,Math.PI/2);
+  cx.lineTo(x+r,y+h);
+  cx.arc(x+r,y+h-r,r,Math.PI/2,Math.PI);
+  cx.lineTo(x,y+r);
+  cx.arc(x+r,y+r,r,Math.PI,-Math.PI/2);
+  cx.closePath();
+}
+
+function drawAvatar(){
+  var sc=Math.min(W,H)/270;
+  var cxc=W/2, cyc=H*0.60;
+  var fy=Math.sin(t*1.1)*5*sc;
+  var fr=Math.sin(t*0.65)*0.04;
+
+  cx.save();
+  cx.translate(cxc,cyc+fy);
+  cx.rotate(fr);
+  cx.scale(sc,sc);
+
+  /* shadow */
+  cx.save();cx.translate(0,128);cx.scale(1,0.22);
+  el(0,0,52,22);cx.fillStyle='rgba(0,0,0,0.20)';cx.fill();
+  cx.restore();
+
+  /* LEGS */
+  cx.fillStyle='#2C3E50';
+  rr(-25,58,22,62,6);cx.fill();
+  rr(3,58,22,62,6);cx.fill();
+  /* shoes */
+  cx.fillStyle='#3E2200';
+  rr(-30,116,30,14,4);cx.fill();
+  rr(0,116,30,14,4);cx.fill();
+
+  /* MOCHILA WAYUU (draw before body so it sits behind) */
+  cx.save();
+  cx.translate(-2,-25);
+  /* bag body */
+  cx.fillStyle='#C0392B';
+  rr(-22,-52,44,54,5);cx.fill();
+  /* stripes */
+  var sc2=['#F4D03F','#27AE60','#9B59B6','#E67E22','#1A5F7A','#F39C12','#F4D03F'];
+  sc2.forEach(function(col,i){
+    cx.fillStyle=col;
+    rr(-21,-50+i*8,42,6,1);cx.fill();
+  });
+  /* strap */
+  cx.strokeStyle='#7B241C';cx.lineWidth=7;cx.lineCap='round';
+  cx.beginPath();cx.moveTo(0,2);cx.quadraticCurveTo(28,-18,18,-54);cx.stroke();
+  cx.restore();
+
+  /* BODY ruana teal */
+  cx.fillStyle='#1A5F7A';
+  rr(-34,-82,68,86,10);cx.fill();
+  /* poncho side flares */
+  cx.fillStyle='#16527E';
+  cx.beginPath();cx.moveTo(-34,4);cx.lineTo(-52,58);cx.lineTo(-34,58);cx.closePath();cx.fill();
+  cx.beginPath();cx.moveTo(34,4);cx.lineTo(52,58);cx.lineTo(34,58);cx.closePath();cx.fill();
+  /* belt */
+  cx.fillStyle='#D4AC0D';
+  rr(-36,-2,72,11,3);cx.fill();
+  /* collar V gold stripe */
+  cx.strokeStyle='#F4D03F';cx.lineWidth=4;cx.lineCap='round';
+  cx.beginPath();cx.moveTo(-18,-82);cx.lineTo(0,-64);cx.lineTo(18,-82);cx.stroke();
+
+  /* LEFT ARM */
+  cx.save();
+  cx.translate(-40,-52);
+  cx.rotate(pointing?-0.12:0.20);
+  cx.fillStyle='#1A5F7A';
+  rr(-10,0,20,52,10);cx.fill();
+  cx.fillStyle='#C0805A';el(0,57,12,12);cx.fill();
+  cx.restore();
+
+  /* RIGHT ARM with map */
+  var rRot=pointing?(-0.68+Math.sin(t*3)*0.06):-0.22;
+  cx.save();
+  cx.translate(40,-52);
+  cx.rotate(rRot);
+  cx.fillStyle='#1A5F7A';
+  rr(-10,0,20,52,10);cx.fill();
+  cx.fillStyle='#C0805A';el(0,57,12,12);cx.fill();
+  /* MAP scroll */
+  cx.save();
+  cx.translate(0,68);
+  cx.rotate(-rRot+0.38);
+  cx.fillStyle='#F9F0D0';rr(-16,-15,32,30,3);cx.fill();
+  cx.strokeStyle='#C8A200';cx.lineWidth=1.5;cx.strokeRect(-16,-15,32,30);
+  cx.strokeStyle='#1A5F7A';cx.lineWidth=1.5;cx.lineCap='round';
+  [[-9,-9,16],[-9,-3,19],[-9,3,13],[-9,9,17]].forEach(function(l){
+    cx.beginPath();cx.moveTo(l[0],l[1]);cx.lineTo(l[0]+l[2],l[1]);cx.stroke();
+  });
+  cx.fillStyle='#E74C3C';el(4,-6,4,4);cx.fill();
+  cx.fillStyle='#C0392B';el(4,-6,2.2,2.2);cx.fill();
+  cx.restore();
+  cx.restore();
+
+  /* NECK */
+  cx.fillStyle='#C0805A';rr(-13,-104,26,26,6);cx.fill();
+
+  /* HEAD */
+  cx.fillStyle='#C0805A';
+  el(0,-132,42,46);cx.fill();
+  /* ears */
+  cx.fillStyle='#B07040';
+  el(-44,-132,12,15);cx.fill();
+  el(44,-132,12,15);cx.fill();
+
+  /* eyebrows */
+  cx.strokeStyle='#3C1A00';cx.lineWidth=3.5;cx.lineCap='round';
+  cx.beginPath();cx.moveTo(-28,-118);cx.quadraticCurveTo(-18,-126,-9,-118);cx.stroke();
+  cx.beginPath();cx.moveTo(28,-118);cx.quadraticCurveTo(18,-126,9,-118);cx.stroke();
+
+  /* eye whites */
+  cx.fillStyle='#fff';el(-17,-126,11,10);cx.fill();el(17,-126,11,10);cx.fill();
+  /* irises */
+  cx.fillStyle='#5D3A1A';el(-17,-126,6.5,6.5);cx.fill();el(17,-126,6.5,6.5);cx.fill();
+  /* pupils */
+  cx.fillStyle='#111';el(-16,-127,3.2,3.2);cx.fill();el(18,-127,3.2,3.2);cx.fill();
+  /* highlights */
+  cx.fillStyle='#fff';el(-14,-129,2,2);cx.fill();el(20,-129,2,2);cx.fill();
+
+  /* nose */
+  cx.fillStyle='#AA7050';el(0,-140,6,5);cx.fill();
+
+  /* cheeks */
+  cx.fillStyle='rgba(210,130,90,0.28)';el(-30,-132,12,9);cx.fill();el(30,-132,12,9);cx.fill();
+
+  /* mouth + jaw */
+  var jaw=speaking?Math.abs(Math.sin(t*9))*11:2;
+  cx.strokeStyle='#6B2D0A';cx.lineWidth=3;cx.lineCap='round';
+  cx.beginPath();cx.arc(0,-148+jaw*0.5,15,0.08*Math.PI,0.92*Math.PI);cx.stroke();
+  if(jaw>3){
+    cx.fillStyle='#FFFAF0';
+    rr(-9,-148+jaw*0.5,18,jaw*0.6,2);cx.fill();
+  }
+
+  /* SOMBRERO VUELTIAO */
+  cx.save();
+  cx.translate(0,-182);
+
+  /* brim shadow */
+  cx.fillStyle='rgba(0,0,0,0.14)';el(2,4,78,20);cx.fill();
+
+  /* brim base cream */
+  cx.fillStyle='#F2EDD0';el(0,0,76,19);cx.fill();
+
+  /* woven vueltiao pattern — alternating black/gold wedges */
+  var NW=26;
+  for(var wi=0;wi<NW;wi++){
+    var ang=(wi/NW)*Math.PI*2;
+    cx.save();
+    cx.rotate(ang);
+    cx.fillStyle=wi%2===0?'rgba(20,20,20,0.88)':'rgba(200,162,0,0.88)';
+    cx.beginPath();
+    cx.moveTo(9,-3);cx.lineTo(75,-6);cx.lineTo(75,6);cx.lineTo(9,3);
+    cx.closePath();cx.fill();
+    cx.restore();
+  }
+  /* centre disc to cover noisy inner point */
+  cx.fillStyle='#F2EDD0';el(0,0,11,5);cx.fill();
+
+  /* crown */
+  cx.fillStyle='#F2EDD0';
+  cx.beginPath();
+  cx.moveTo(-28,0);cx.lineTo(-30,-40);
+  cx.bezierCurveTo(-30,-58,30,-58,30,-40);
+  cx.lineTo(28,0);cx.closePath();cx.fill();
+
+  /* crown vueltiao stripes */
+  var CN=18;
+  for(var ci=0;ci<CN;ci++){
+    var ca=(ci/CN)*Math.PI*2;
+    cx.save();cx.rotate(ca);
+    cx.fillStyle=ci%2===0?'rgba(20,20,20,0.72)':'rgba(200,162,0,0.72)';
+    cx.beginPath();cx.moveTo(0,-1.5);cx.lineTo(28,-3);cx.lineTo(28,3);cx.lineTo(0,1.5);cx.closePath();cx.fill();
+    cx.restore();
+  }
+
+  /* gold hat band */
+  cx.strokeStyle='#E8C000';cx.lineWidth=6;
+  cx.beginPath();cx.ellipse(0,-1,30,9,0,0,Math.PI*2);cx.stroke();
+
+  cx.restore(); /* end sombrero */
+  cx.restore(); /* end avatar */
+}
+
+function loop(){
+  requestAnimationFrame(loop);
+  t+=0.016;
+  cx.clearRect(0,0,W,H);
+  /* particles */
+  pts.forEach(function(p){
+    p.y+=p.vy;p.x+=Math.sin(t*0.5+p.y*0.01)*0.4;
+    if(p.y<0)p.y=H;
+    cx.beginPath();cx.arc(p.x,p.y,p.sz,0,Math.PI*2);
+    cx.fillStyle=p.col;cx.fill();
+  });
+  drawAvatar();
+}
+loop();
+
+window.addEventListener('resize',function(){
+  W=window.innerWidth;H=window.innerHeight;
+  cv.width=W;cv.height=H;
+});
 </script>
 </body>
 </html>`;
@@ -326,15 +278,24 @@ const ARGuideAvatar3D = forwardRef<ARGuideAvatarRef, Props>(
     useImperativeHandle(ref, () => ({
       setSpeaking: (v) => {
         webviewRef.current?.injectJavaScript(
-          `window.dispatchEvent(new MessageEvent('message',{data:JSON.stringify({type:'speak',value:${v}})}));true;`
+          `(function(){var e=new MessageEvent('message',{data:JSON.stringify({type:'speak',value:${v}})});window.dispatchEvent(e);document.dispatchEvent(e);}());true;`
         );
       },
       setPointing: (v) => {
         webviewRef.current?.injectJavaScript(
-          `window.dispatchEvent(new MessageEvent('message',{data:JSON.stringify({type:'point',value:${v}})}));true;`
+          `(function(){var e=new MessageEvent('message',{data:JSON.stringify({type:'point',value:${v}})});window.dispatchEvent(e);document.dispatchEvent(e);}());true;`
         );
       },
     }));
+
+    if (Platform.OS === "web") {
+      return (
+        <View style={[styles.container, { width, height, alignItems: "center", justifyContent: "center" }]}>
+          <View style={{ width: 60, height: 60, borderRadius: 30, backgroundColor: "rgba(26,239,255,0.15)", borderWidth: 2, borderColor: "#1AEFFF", alignItems: "center", justifyContent: "center" }}>
+          </View>
+        </View>
+      );
+    }
 
     return (
       <View style={[styles.container, { width, height }]}>
@@ -350,6 +311,7 @@ const ARGuideAvatar3D = forwardRef<ARGuideAvatarRef, Props>(
           overScrollMode="never"
           backgroundColor="transparent"
           allowsInlineMediaPlayback
+          mixedContentMode="always"
         />
       </View>
     );
@@ -357,9 +319,10 @@ const ARGuideAvatar3D = forwardRef<ARGuideAvatarRef, Props>(
 );
 
 ARGuideAvatar3D.displayName = "ARGuideAvatar3D";
+
 export { ARGuideAvatar3D };
 
 const styles = StyleSheet.create({
-  container: { overflow: "hidden" },
+  container: { overflow: "hidden", backgroundColor: "transparent" },
   webview: { flex: 1, backgroundColor: "transparent" },
 });
